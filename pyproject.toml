@@ -1,0 +1,29 @@
+[project]
+name = "my-prof"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "dmike-bit", email = "d.mike.s@yandex.ru" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "django>=6.1.1",
+]
+
+[project.scripts]
+my-prof = "my_prof:main"
+
+[build-system]
+requires = ["uv_build>=0.12.18,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "taskipy>=1.14.1",
+]
+
+[tool.taskipy.tasks]
+server = "python manage.py runserver"
+migrate = "python manage.py migrate"
+makemigrations = "python manage.py makemigrations"
