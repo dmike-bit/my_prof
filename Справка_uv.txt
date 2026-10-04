@@ -1,0 +1,115 @@
+Шпаргалка по uv
+uv — это сверхбыстрый менеджер пакетов и проектов для Python, написанный на Rust. Он заменяет pip, pip-tools, pipx, poetry, pyenv, virtualenv и другие инструменты.
+
+Установка
+powershell
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+bash
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+Управление версиями Python
+bash
+uv python install 3.12        # Установить Python 3.12
+uv python list                # Список доступных версий
+uv python pin 3.12            # Закрепить версию для текущего проекта
+uv python uninstall 3.11      # Удалить версию
+Важно: uv python pin только меняет .python-version, но не пересоздаёт существующее окружение. Для применения запустите uv sync.
+
+Создание проекта
+bash
+uv init my_project            # Создать новый проект
+cd my_project
+
+uv init --package my_pkg      # Проект с возможностью публикации
+uv init --lib my_lib          # Библиотека
+После uv init создаются: pyproject.toml, .python-version, .venv/.
+
+Управление зависимостями
+bash
+uv add requests               # Добавить пакет
+uv add "flask>=2.0,<3.0"      # С ограничением версии
+uv add pytest --dev           # Добавить в dev-зависимости
+uv add -r requirements.txt    # Добавить все из requirements.txt
+
+uv remove requests            # Удалить пакет
+
+uv lock                       # Создать/обновить uv.lock
+uv lock --upgrade             # Обновить все пакеты
+uv lock --upgrade-package requests  # Обновить конкретный пакет
+uv add записывает в pyproject.toml нижнюю границу (например, requests>=2.31.0), а точная версия фиксируется в uv.lock.
+
+Синхронизация окружения
+bash
+uv sync                       # Синхронизировать зависимости с окружением
+uv sync --frozen              # Использовать uv.lock без проверки (для CI)
+uv sync --locked              # Проверить, что uv.lock соответствует pyproject.toml, иначе ошибка
+uv sync --extra test          # Установить опциональные зависимости
+--frozen игнорирует расхождения, --locked падает с ошибкой, если pyproject.toml и uv.lock разошлись. Для CI используйте --locked.
+
+Запуск скриптов и команд
+bash
+uv run python main.py         # Запустить скрипт в окружении проекта
+uv run pytest                 # Запустить команду в окружении
+uv run --with requests python -c "import requests"  # С временной зависимостью
+uv run автоматически синхронизирует окружение перед запуском.
+
+Работа с инструментами (аналог pipx)
+bash
+uvx ruff check .              # Запустить инструмент во временном окружении
+uv tool install ruff          # Установить инструмент глобально
+uv tool list                  # Список установленных инструментов
+uv tool uninstall ruff        # Удалить инструмент
+uvx (сокращение от uv tool run) не читает inline-зависимости скриптов. Для скриптов используйте uv run.
+
+pip-совместимый интерфейс
+bash
+uv venv                       # Создать виртуальное окружение
+uv venv --python 3.12         # С указанием версии
+uv venv --seed                # С pip внутри окружения
+
+uv pip install requests       # Установить пакет (аналог pip install)
+uv pip list                   # Список установленных пакетов
+uv pip freeze                 # Список в формате requirements
+uv pip uninstall requests     # Удалить пакет
+
+uv pip compile pyproject.toml -o requirements.txt  # Скомпилировать lock-файл
+uv pip sync requirements.txt  # Синхронизировать из requirements.txt
+Окружения uv не содержат pip по умолчанию. Если нужен — используйте uv venv --seed.
+
+Просмотр зависимостей
+bash
+uv tree                       # Дерево зависимостей проекта
+uv pip tree                   # Дерево зависимостей окружения
+Кэш и обслуживание
+bash
+uv cache clean                # Очистить кэш
+uv cache prune                # Удалить устаревшие записи
+uv cache dir                  # Показать путь к кэшу
+
+uv self update                # Обновить uv до последней версии
+uv version                    # Показать версию проекта
+Структура проекта
+text
+my_project/
+├── .venv/                # Виртуальное окружение (не коммитить)
+├── .python-version       # Версия Python для проекта
+├── pyproject.toml        # Конфигурация и зависимости
+├── uv.lock               # Зафиксированные версии (коммитить!)
+├── src/
+│   └── my_project/
+└── README.md
+uv.lock нужно коммитить в git — это гарантирует воспроизводимость окружения на других машинах.
+
+Быстрая справка
+Задача	Команда
+Создать проект	uv init my_project
+Добавить пакет	uv add requests
+Удалить пакет	uv remove requests
+Синхронизировать	uv sync
+Запустить скрипт	uv run script.py
+Запустить инструмент	uvx ruff check .
+Создать venv	uv venv
+Обновить пакет	uv lock --upgrade-package requests
+Дерево зависимостей	uv tree
+Обновить uv	uv self update
